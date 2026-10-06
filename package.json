@@ -73,7 +73,7 @@
       "deleteAppDataOnUninstall": false
     },
     "portable": {
-      "artifactName": "${productName}-${version}-portable.${ext}"
+      "artifactName": "AIUsage-Science-Proxy-${version}-portable.${ext}"
     },
     "publish": null
   },

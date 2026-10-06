@@ -187,7 +187,7 @@ tools/windows/science-proxy/
 | 3 · 成本与用量 | 调用记录 JSONL + 聚合 UI | `analytics-store.mjs`：每次上游调用一条记录，按天分文件 `<logging.dir>/analytics/calls-YYYY-MM-DD.jsonl`；字段含发布模型/真实模型/上游 id/命中原由（含档位）/token/耗时/TTFT/工具调用数/**上游返回的真实 `cost` 与 `gateway_cost`**/成败与错误摘要；写盘失败只降级不影响推理；UI：汇总（调用数、成功/失败、失败率、成本、P95、TTFT、token）+ 按天/按模型/按上游 + 最近调用 + 错误摘要 |
 | 4 · 桌面 app 免登录 | **无需 hack，实测天然成立** | 见下方「阶段 4 spike 结论」 |
 | 5 · 登录态与备份 | 写入/移除虚拟登录 + 备份列表/一键还原 + doctor | 服务层新增 `loginWrite/loginRemove/backupsList/backupCreate/backupRestore/doctor`；危险操作两步确认；`doctor.mjs` 把逆向假设做成 9 项可复现断言（二进制 / 数据目录 / `encryption.key` / 令牌数量与 v2 格式 / daemon 健康 / CSRF=204+`operon_csrf` / 写请求缺 Origin → 403 `origin_required` / CLI 铸 nonce / 推理代理按 Anthropic 形状发布模型） |
-| 6 · 托盘与打包 | 托盘 + NSIS/免安装 + GitHub Actions | 关闭窗口收进托盘（链路继续），托盘菜单含启停/重启/打开浏览器界面/打开桌面 app/退出；托盘图标由 `scripts/make-tray-icon.mjs` 用 zlib 手写 PNG 生成（无图形依赖）；`electron-builder` 产出 NSIS 安装包与 portable；打包版配置播种到 `%APPDATA%\aiusage-science-proxy\config.json`（真实密钥不入安装包）；`.github/workflows/windows-science-proxy.yml` 用独立 `win-v*` 标签前缀，避免触发仓库现有的 macOS `v*.*.*` 流水线 |
+| 6 · 托盘与打包 | 托盘 + NSIS/免安装 + GitHub Actions | 关闭窗口收进托盘（链路继续），托盘菜单含启停/重启/打开浏览器界面/打开桌面 app/退出；托盘图标由 `scripts/make-tray-icon.mjs` 用 zlib 手写 PNG 生成（无图形依赖）；`electron-builder` 产出 NSIS 安装包与 portable；打包版配置播种到 `%APPDATA%\aiusage-science-proxy\config.json`（真实密钥不入安装包）；仓库独立为 `cjdem/AIUsage-Windows`，CI 是 `.github/workflows/build.yml`，用普通 `v*` 标签（与 macOS 那份仓库互不影响） |
 
 ### 阶段 4 spike 结论（桌面 app 免登录）
 
@@ -218,3 +218,20 @@ tools/windows/science-proxy/
 4. 「关闭窗口」的语义从「停止链路」改成「收进托盘」（有托盘后更安全），退出才停链；UI 与 README 已同步。
 5. 阶段 1 复查时发现并修掉一个真实 bug：`status()` 计算了登录态却漏放进返回值，导致界面上的登录态一直是空的；
    已补上并加了单测防回归。
+
+### 独立仓库与 CI（方案 B，已上线）
+
+按你的决定采用**方案 B**：`tools/windows/science-proxy/` 整体作为独立公开仓库
+[`cjdem/AIUsage-Windows`](https://github.com/cjdem/AIUsage-Windows)。本目录自带的 `.gitignore` 继续排除
+`config.json`（真实密钥）/ `node_modules` / `dist`；工作流里的护栏会在 `config.json` 被跟踪时直接失败。
+
+- CI：`.github/workflows/build.yml`，三个作业 `guard → test → package`（推送到 `main` 或打 `v*` 标签触发）。
+- 打 `v*` 标签时额外把安装包挂到该标签的 Release。
+- 已实测跑通：`v0.3.0`、`v0.3.1` 两次发布；工作流徽章 `Build - passing`；
+  Release 资产为 `AIUsage-Science-Proxy-<版本>-setup.exe`、`-portable.exe`、`-setup.exe.blockmap`。
+- 本地打包遇到的 TLS 代理问题（需要 npmmirror 镜像 + 临时关闭证书校验）只在这台机器需要，CI runner 不需要。
+- 推送前做过「真实密钥形态」扫描（`sk_` + 长十六进制、`sk-ant-api/oat/ort…`、已知片段、长 hex 串），
+  50+ 个已跟踪文件全部通过；唯一命中是被白名单放行的假令牌 `sk-ant-virtual-aiusage-local`
+  （本工具写进虚拟登录的占位 access_token，不是真凭据）。
+- 附录：GitHub 会把 Release 资产名里的**空格替换成点**，所以命名统一改用连字符
+  （`AIUsage-Science-Proxy-…`）；`v0.3.1` 的免安装版仍是旧模板（带点），下一个版本起统一。
