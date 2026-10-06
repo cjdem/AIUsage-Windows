@@ -1,0 +1,84 @@
+{
+  "name": "aiusage-science-proxy",
+  "private": true,
+  "version": "0.3.0",
+  "type": "module",
+  "main": "electron/main.mjs",
+  "description": "Windows 版 Claude Science 全链路本地代理 + 桌面控制台：免 Claude 账号登录 + 推理转第三方 OpenAI Chat 上游",
+  "author": "AIUsage",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "electron .",
+    "app": "electron .",
+    "service": "node src/app-service.mjs",
+    "test": "node --test \"test/*.test.mjs\"",
+    "inference": "node src/inference-server.mjs",
+    "session": "node src/session-proxy.mjs",
+    "status": "node src/app-service.mjs status",
+    "probe": "node src/probe.mjs",
+    "icon": "node scripts/make-tray-icon.mjs",
+    "dist": "electron-builder --win nsis portable",
+    "dist:dir": "electron-builder --win --dir",
+    "release": "electron-builder --win nsis --publish never"
+  },
+  "build": {
+    "appId": "app.aiusage.science-proxy",
+    "productName": "AIUsage Science Proxy",
+    "copyright": "个人工具，仅本地使用",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "src/**/*",
+      "ui/**/*",
+      "scripts/make-tray-icon.mjs",
+      "package.json",
+      "config.example.json",
+      "!**/*.test.mjs",
+      "!**/node_modules/**"
+    ],
+    "extraMetadata": {
+      "main": "electron/main.mjs"
+    },
+    "win": {
+      "icon": "ui/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AIUsage Science Proxy",
+      "artifactName": "${productName}-${version}-setup.${ext}",
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.${ext}"
+    },
+    "publish": null
+  },
+  "devDependencies": {
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3"
+  }
+}

@@ -1,0 +1,103 @@
+# AIUsage Science Proxy（Windows）的构建与发布流水线。
+#
+# 本仓库以 tools/windows/science-proxy 为根（独立仓库，Windows 版独立发版），
+# 所以路径都是仓库根的相对路径，标签用普通 v*，不会影响 macOS 那个仓库的发布流程。
+#
+# 触发：
+#   1) 手动（Actions → Run workflow）
+#   2) 推送到 main（改到 src/electron/ui/test 等才触发）：跑测试 + 打包，产物作为 artifact
+#   3) 打 `v0.3.0` 这类标签：跑测试 + 打包，并把安装包挂到该标签的 Release
+name: Build
+
+on:
+  workflow_dispatch:
+  # 注意：不要给 push 加 paths 过滤器——GitHub Actions 里 paths 与 tags 不能共存
+  # （标签推送没有文件路径，加了 paths 会导致打标签时根本不触发）。所以这里：
+  #   · 推送到 main/master：跑测试 + 打包（产物作为 artifact）
+  #   · 推 v* 标签：同上，并把安装包挂到该标签的 Release
+  push:
+    branches: [main, master]
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    name: 前置检查（真实密钥未入库）
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 确认 config.json（含真实上游密钥）没有被跟踪
+        shell: bash
+        run: |
+          if git ls-files --error-unmatch config.json >/dev/null 2>&1; then
+            echo "::error::config.json 被 git 跟踪了！该文件含真实上游密钥，必须 git rm --cached config.json 并保持忽略。"
+            exit 1
+          fi
+          echo "OK：config.json 未被跟踪。"
+
+  test:
+    name: 单元测试与集成测试
+    needs: guard
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 安装依赖
+        run: npm ci --no-audit --no-fund
+      - name: 跑测试
+        run: node --test "test/*.test.mjs"
+
+  package:
+    name: 打包（NSIS 安装包 + 免安装版）
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 安装依赖
+        run: npm ci --no-audit --no-fund
+      - name: 生成图标
+        run: npm run icon
+      - name: 打包
+        run: npx electron-builder --win nsis portable --publish never
+      - name: 打包产物自检（存在且体积合理）
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist -Filter '*setup.exe' | Select-Object -First 1
+          $portable = Get-ChildItem dist -Filter '*portable.exe' | Select-Object -First 1
+          if (-not $setup) { throw "没有生成安装包" }
+          if (-not $portable) { throw "没有生成免安装版" }
+          foreach ($f in @($setup, $portable)) {
+            $mb = [math]::Round($f.Length / 1MB, 1)
+            Write-Host "$($f.Name) = ${mb} MB"
+            if ($mb -lt 40) { throw "$($f.Name) 体积异常（$mb MB），疑似打包缺文件" }
+          }
+          Write-Host "OK"
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: science-proxy-installers
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+          if-no-files-found: error
+          retention-days: 30
+      - name: 发布到 Release（仅 v* 标签）
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            dist/*.exe
+            dist/*.blockmap

@@ -1,0 +1,10 @@
+# 真实配置（含上游密钥）绝不入库
+config.json
+*.local.json
+logs/
+backups/
+node_modules/
+*.log
+
+# 桌面应用打包产物（体积大，绝不入库）
+dist/

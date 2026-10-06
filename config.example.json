@@ -1,0 +1,36 @@
+{
+  "$comment": "复制本文件为 config.json 后填写。config.json 已被 .gitignore 忽略，密钥不会入库。",
+  "upstream": {
+    "baseURL": "https://api.example.com/v1",
+    "apiKey": "sk-your-key",
+    "apiMode": "chat_completions",
+    "$comment_stream": "本工具始终以流式（stream:true）请求上游；客户端要非流式时由本地聚合，无需配置。",
+    "maxTokensField": "max_tokens",
+    "sendStreamUsage": true,
+    "supportsTools": true,
+    "supportsReasoningEffort": false,
+    "extraHeaders": {}
+  },
+  "models": [
+    { "id": "your-model-id", "publishAs": "claude-opus-4-8", "displayName": "你的模型" }
+  ],
+  "defaultModel": "your-model-id",
+  "unknownModelPolicy": "default",
+  "ports": {
+    "inference": 14402,
+    "publicEntry": 8000,
+    "daemon": 8010,
+    "sandbox": 8001
+  },
+  "science": {
+    "dataDir": "%USERPROFILE%\\.claude-science",
+    "binaryPath": "%LOCALAPPDATA%\\Programs\\ClaudeScience\\claude-science.exe",
+    "configTomlPath": "%USERPROFILE%\\.claude-science\\config.toml",
+    "writeExtraAllowedOrigins": true,
+    "noAutoUpdate": true
+  },
+  "logging": {
+    "level": "info",
+    "dir": "%LOCALAPPDATA%\\ClaudeScience\\aiusage-proxy\\logs"
+  }
+}

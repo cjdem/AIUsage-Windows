@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <!-- 页面自身不需要任何网络权限：所有数据都走 IPC；内联脚本/样式一律禁止 -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'" />
+  <title>AIUsage · Claude Science 控制台</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">AI</div>
+        <div class="brand-text">
+          <div class="brand-title">AIUsage</div>
+          <div class="brand-sub">Claude Science 控制台</div>
+        </div>
+      </div>
+      <nav class="nav" id="nav" aria-label="主导航"></nav>
+      <div class="sidebar-foot">
+        <div class="muted small" id="foot-version">—</div>
+        <div class="muted small">关闭窗口 = 收进托盘（不做开机自启）</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="phase-wrap">
+          <span class="pill pill-idle" id="phase-pill">正在读取状态…</span>
+          <span class="muted small" id="phase-detail"></span>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="btn-start" type="button">启动链路</button>
+          <button class="btn danger" id="btn-stop" type="button">停止</button>
+          <button class="btn" id="btn-restart" type="button">重启</button>
+          <button class="btn ghost" id="btn-open" type="button">打开界面</button>
+        </div>
+      </header>
+
+      <div class="banner hidden" id="banner" role="status"></div>
+      <section class="view" id="view"></section>
+    </main>
+  </div>
+
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>
