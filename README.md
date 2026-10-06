@@ -1,9 +1,29 @@
 # Windows 版 Claude Science 代理（免 Claude 账号）
 
+![Build](https://github.com/cjdem/AIUsage-Windows/actions/workflows/build.yml/badge.svg)
+
 在 Windows 上无需 Claude 账号、无需订阅，把本地安装的 **Claude Science** 全链路接到你自己的
 OpenAI Chat 兼容模型上：**登录态由本地伪造凭证获得，推理经本地代理转发到你自付的第三方端点**。
 
 > 定位：个人学习与研究，使用者自负风险。推理不经过 Anthropic 服务端；登录用本地虚构账号。
+
+## 下载安装（Releases）
+
+到 [Releases](https://github.com/cjdem/AIUsage-Windows/releases) 下载：
+
+| 文件 | 说明 |
+|---|---|
+| `AIUsage-Science-Proxy-<版本>-setup.exe` | NSIS 安装包（可自选安装目录，自动建桌面/开始菜单快捷方式） |
+| `AIUsage-Science-Proxy-<版本>-portable.exe` | 免安装单文件，双击即用 |
+
+前置条件：本机需已安装 Claude Science（默认 `%LOCALAPPDATA%\Programs\ClaudeScience\claude-science.exe`）。
+
+**首次启动**会在 `%APPDATA%\aiusage-science-proxy\config.json` 生成配置模板——安装包里**不含任何密钥**，
+把 `upstream.apiKey` / `upstream.baseURL` / `models` 换成你自己的即可；也可以直接在控制台的
+「节点与模型映射」页里改并保存（密钥输入框留空＝保持原值，永不回显）。
+
+![控制台仪表盘](docs/screenshot-dashboard.png)
+![节点与模型映射](docs/screenshot-node-config.png)
 
 ---
 
@@ -214,3 +234,16 @@ Science 除了主对话，还会用 `claude-haiku-4-5-20251001` 发起辅助调�
 详细技术与逆向结论见 [`docs/WINDOWS_SCIENCE_PROXY.md`](docs/WINDOWS_SCIENCE_PROXY.md)。
 
 分阶段规划与实施状态见 [`docs/WINDOWS_SCIENCE_APP_ROADMAP.md`](docs/WINDOWS_SCIENCE_APP_ROADMAP.md)。
+
+### 发版流程（下次更新时）
+
+```powershell
+# 1) 改 package.json 里的 version（例如 0.3.1）
+# 2) 提交推送
+git add -A; git commit -m "Release 0.3.1"; git push
+# 3) 打同名标签 -> CI 自动跑测试、打包，并把安装包挂到该标签的 Release
+git tag v0.3.1; git push origin v0.3.1
+```
+
+注意：`tools/windows/science-proxy` 是**独立仓库**（`cjdem/AIUsage-Windows`），与 macOS 那份
+`cjdem/AIUsage` 互不影响；两个仓库各自打各自的标签。

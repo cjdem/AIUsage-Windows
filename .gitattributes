@@ -1,0 +1,15 @@
+# 统一行尾，避免 Windows 提交把整文件标成「改动」
+* text=auto eol=lf
+
+# PowerShell 脚本保持 CRLF（Windows 上双击/执行的兼容性更稳）
+*.ps1 text eol=crlf
+
+# 打包与文档里的二进制资源不参与文本转换
+*.png binary
+*.ico binary
+*.exe binary
+*.blockmap binary
+
+# 让 GitHub 语言统计正确识别（本仓库主要是 JavaScript）
+*.mjs linguist-language=JavaScript
+*.cjs linguist-language=JavaScript

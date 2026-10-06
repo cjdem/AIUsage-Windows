@@ -273,14 +273,21 @@ function bootSmokeWatchdog() {
   }, SMOKE_TIMEOUT_MS);
 }
 
-/** smoke 自检：把六个视图都切一遍，确认都能渲染且没有报错提示。 */
+/** smoke 自检：把六个视图都切一遍，确认都能渲染且没有报错提示；可选逐视图截图。 */
 async function smokeWalkViews() {
   const views = ['dashboard', 'node-config', 'logs', 'analytics', 'login', 'settings'];
   const report = {};
+  // 需要截图时设 AIUSAGE_SCREENSHOT_DIR：每个视图存一张 PNG（可直接当文档素材）
+  const shotDir = process.env.AIUSAGE_SCREENSHOT_DIR ?? null;
+  if (shotDir) fs.mkdirSync(shotDir, { recursive: true });
   for (const id of views) {
     try {
       await mainWindow.webContents.executeJavaScript(`location.hash = '#/${id}'; true`);
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      if (shotDir) {
+        const image = await mainWindow.webContents.capturePage();
+        fs.writeFileSync(path.join(shotDir, `${id}.png`), image.toPNG());
+      }
       report[id] = await mainWindow.webContents.executeJavaScript(`(() => ({
         cards: document.querySelectorAll('.card').length,
         textLength: document.body.innerText.length,
@@ -291,6 +298,7 @@ async function smokeWalkViews() {
       report[id] = { error: err.message };
     }
   }
+  if (shotDir) report.screenshots = shotDir;
   return report;
 }
 

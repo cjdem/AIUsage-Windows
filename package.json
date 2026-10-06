@@ -1,7 +1,7 @@
 {
   "name": "aiusage-science-proxy",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "main": "electron/main.mjs",
   "description": "Windows 版 Claude Science 全链路本地代理 + 桌面控制台：免 Claude 账号登录 + 推理转第三方 OpenAI Chat 上游",
@@ -69,7 +69,7 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "AIUsage Science Proxy",
-      "artifactName": "${productName}-${version}-setup.${ext}",
+      "artifactName": "AIUsage-Science-Proxy-${version}-setup.${ext}",
       "deleteAppDataOnUninstall": false
     },
     "portable": {
